@@ -586,7 +586,7 @@ class Trainer():
         return generated_images
 
     def print_log(self):
-        print('G: {g_loss:.2f} | D: {d_loss:.2f} | GP: {last_gp_loss:.2f} | PL: {pl_mean:.2f}'.format(self))
+        print('G: {g_loss:.2f} | D: {d_loss:.2f} | GP: {last_gp_loss:.2f} | PL: {pl_mean:.2f}'.format(g_loss=self.g_loss, d_loss=d_loss, last_gp_loss=last_gp_loss, pl_mean=pl_mean))
 
     def model_name(self, num):
         return 'models/{name}/model_{num}.pt'.format(name=self.name, num=num)
