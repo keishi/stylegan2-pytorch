@@ -31,7 +31,7 @@ MODELS_DIR = CURRENT_DIR / 'models'
 
 # constants
 
-SAVE_EVERY = 10000
+SAVE_EVERY = 2000
 EXTS = ['jpg', 'png']
 
 # helpers
@@ -107,10 +107,10 @@ class Dataset(data.Dataset):
         super().__init__()
         self.folder = folder
         self.image_size = image_size        
-        self.paths = [p for ext in EXTS for p in Path(f'{folder}').glob(f'**/*.{ext}')]
+        self.paths = [p for ext in EXTS for p in Path('{folder}'.format(folder=folder)).glob('**/*.{ext}'.format(ext=ext))]
 
         if len(self.paths) == 0:
-            raise Exception(f'no images found at {folder}')
+            raise Exception('no images found at {folder}'.format(folder=folder))
 
         self.transform = transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
@@ -534,12 +534,12 @@ class Trainer():
         # regular
 
         generated_images = generate_images(self.GAN.S, self.GAN.G, latents, n)
-        torchvision.utils.save_image(generated_images, f'results/{self.name}/{str(num)}.jpg', nrow=num_rows)
+        torchvision.utils.save_image(generated_images, 'results/{name}/{num}.jpg'.format(name=self.name, num=str(num)), nrow=num_rows)
         
         # moving averages
 
         generated_images = generate_images(self.GAN.SE, self.GAN.GE, latents, n)
-        torchvision.utils.save_image(generated_images, f'results/{self.name}/{str(num)}-ema.jpg', nrow=num_rows)
+        torchvision.utils.save_image(generated_images,'results/{name}/{num}-ema.jpg'.format(name=self.name, num=str(num)), nrow=num_rows)
 
         # mixing regularities
 
@@ -559,7 +559,7 @@ class Trainer():
         mixed_latents = [(tmp1, tt), (tmp2, num_layers - tt)]
 
         generated_images = generate_images(self.GAN.SE, self.GAN.GE, mixed_latents, n)
-        torchvision.utils.save_image(generated_images, f'results/{self.name}/{str(num)}-mr.jpg', nrow=num_rows)
+        torchvision.utils.save_image(generated_images, 'results/{name}/{num}-mr.jpg'.format(name=self.name, num=str(num)), nrow=num_rows)
 
     @torch.no_grad()
     def generate_truncated(self, style, noi, trunc = 0.5):
@@ -586,18 +586,18 @@ class Trainer():
         return generated_images
 
     def print_log(self):
-        print(f'G: {self.g_loss:.2f} | D: {self.d_loss:.2f} | GP: {self.last_gp_loss:.2f} | PL: {self.pl_mean:.2f}')
+        print('G: {g_loss:.2f} | D: {d_loss:.2f} | GP: {last_gp_loss:.2f} | PL: {pl_mean:.2f}'.format(self))
 
     def model_name(self, num):
-        return f'models/{self.name}/model_{num}.pt'
+        return 'models/{name}/model_{num}.pt'.format(name=self.name, num=num)
 
     def init_folders(self):
         (RESULTS_DIR / self.name).mkdir(exist_ok=True)
         (MODELS_DIR / self.name).mkdir(exist_ok=True)
 
     def clear(self):
-        rmtree(f'./models/{self.name}')
-        rmtree(f'./results/{self.name}')
+        rmtree('./models/{name}'.format(name=self.name))
+        rmtree('./results/{name}'.format(name=self.name))
         self.init_folders()
 
     def save(self, num):
@@ -611,6 +611,6 @@ class Trainer():
             if len(saved_nums) == 0:
                 return
             name = saved_nums[-1]
-            print(f'continuing from previous epoch - {name}')
+            print('continuing from previous epoch - {name}'.format(name=name))
         self.steps = name * SAVE_EVERY
         self.GAN.load_state_dict(torch.load(self.model_name(name)))
