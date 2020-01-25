@@ -103,7 +103,7 @@ class EMA():
 # dataset
 
 class Dataset(data.Dataset):
-    def __init__(self, folder, image_size):
+    def __init__(self, folder, image_size, no_flip):
         super().__init__()
         self.folder = folder
         self.image_size = image_size        
@@ -112,11 +112,15 @@ class Dataset(data.Dataset):
         if len(self.paths) == 0:
             raise Exception('no images found at {folder}'.format(folder=folder))
 
-        self.transform = transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
+        tl = []
+        if not no_flip:
+            tl.append(transforms.RandomHorizontalFlip())
+        tl.append([
             transforms.RandomResizedCrop(image_size, scale=(0.7, 1.0)),
             transforms.ToTensor()
         ])
+
+        self.transform = transform = transforms.Compose(tl)
 
     def __len__(self):
         return len(self.paths)
@@ -376,7 +380,7 @@ class StyleGAN2(nn.Module):
         return x
 
 class Trainer():
-    def __init__(self, name, folder, image_size, batch_size = 4, lr = 2e-4, mixed_prob = 0.9, gradient_accumulate_every=1, *args, **kwargs):
+    def __init__(self, name, folder, image_size, batch_size = 4, lr = 2e-4, mixed_prob = 0.9, gradient_accumulate_every=1, no_flip=False, *args, **kwargs):
         self.GAN = StyleGAN2(lr=lr, image_size = image_size, *args, **kwargs)
         self.GAN.to(d())
 
@@ -391,7 +395,7 @@ class Trainer():
         self.av = None
         self.pl_mean = 0
 
-        self.dataset = Dataset(folder, image_size)
+        self.dataset = Dataset(folder, image_size, no_flip)
         self.loader = cycle(data.DataLoader(self.dataset, num_workers = 1, batch_size = batch_size, drop_last = True, shuffle=True, pin_memory=True))
         self.gradient_accumulate_every = gradient_accumulate_every
 
